@@ -80,7 +80,7 @@ class snake():
         final.anterior.siguiente = None
         final = final.anterior
 
-    def recorrer(self):
+    def recorrer(self, stdscr):
         temp = self.inicio
         while(temp != None):
             x = temp.posX
@@ -185,13 +185,132 @@ def puntuacion(stdscr):
     area = [[4,4], [h-4, w-4]]
     textpad.rectangle(stdscr, area[0][0], area[0][1], area[1][0], area[1][1])
     stdscr.addstr(1, w//2 - len("Puntuacion")//2, "Puntuacion")
+    
+class NodoUsuario():
+    def __init__(self, Nombre):
+        self.siguiente = None
+        self.anterior = None 
+        self.Nombre = Nombre 
+
+#Lista doble circular para los usuarios 
+class Usuarios():
+    def __init__(self):
+        self.inicio = None
+        self.final = None
+        self.size = 0
+    
+    def Vacia(self):
+        return self.size == 0
+
+    def NuevoUser(self, Nombre):
+        nuevo = NodoUsuario(Nombre)
+        if(self.Vacia()):
+            self.inicio = nuevo
+            self.final = nuevo
+            self.inicio.anterior = self.final
+            self.final.siguiente = self.inicio
+        else:
+            self.final.siguiente = nuevo
+            nuevo.anterior = self.final
+            self.final = nuevo
+            self.final.siguiente = self.inicio
+            self.inicio.anterior = self.final
+        self.size = self.size + 1
+
+    def RecorrerUs(self, stdscr, dir, auxPos):
+        h, w = stdscr.getmaxyx()
+        if(self.Vacia()):
+            stdscr.addstr(15, w//2-len("NO hay usuarios, ingrese un nombre")//2, "NO hay usuarios, ingrese un nombre")
+        else: 
+            stdscr.addstr(15, 10, "<-")
+            stdscr.addstr(15, w//2-len(self.inicio.Nombre)//2, self.inicio.Nombre)
+            stdscr.addstr(15, w-15, "->")
+            if (dir == "der" and auxPos == self.size):
+                temp = final.siguiente
+                stdscr.addstr(15, 10, "<-")
+                stdscr.addstr(15, w//2-len(temp.Nombre)//2, temp.Nombre)
+                stdscr.addstr(15, w-15, "->")
+            elif(dir == "der"):
+                temp = self.inicio
+                while (auxPos < self.size):
+                    temp = temp.siguiente
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(temp.Nombre)//2, temp.Nombre)
+                    stdscr.addstr(15, w-15, "->")
+            elif (dir == "izq" and auxPos == 0):
+                temp = self.final
+                auxPos = self.size
+                stdscr.addstr(15, 10, "<-")
+                stdscr.addstr(15, w//2-len(temp.Nombre)//2, temp.Nombre)
+                stdscr.addstr(15, w-15, "->")
+            elif (dir == "izq"):
+                temp = self.final
+                auxPos = self.size
+                while (auxPos > self.size):
+                    temp = temp.anterior
+                    auxPos = auxPos-1
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(temp.Nombre)//2, temp.Nombre)
+                    stdscr.addstr(15, w-15, "->")
+    
+    def graficarUser(self):
+        contador = 0
+        if (self.Vacia()):
+            print("No hay usuarios creados ")
+        else:
+            temp = self.inicio
+            grafica = open("GraficarUsuarios.dot", "w")
+            grafica.write("digraph G { \n")
+            grafica.write("rankdir=LR  \n")
+            grafica.write("node [shape= box, color=orange]; \n")
+            #En el while guardo todos los nodos desde 0 
+            contador = 0 
+            while(contador < self.size):
+                grafica.write("node"+ str(contador) + " [label = " + str(temp.Nombre)+"] \n")
+                contador+= 1
+                temp = temp.siguiente
+            #Creando los enlaces hacia el final, menos el ultimo nodo
+            for EDerecho in range(0,contador-1):
+                grafica.write("node"+str(EDerecho)+" -> ")
+            grafica.write("node"+str(contador-1) + " -> node0" ) #Imprimimos el ultimo nodo con enlace al primero
+            #Creando los enlaces hacia el inicio, menos el primero
+            grafica.write("\n")
+            contador = contador-1
+            while(contador != 0):
+                grafica.write("node"+str(contador)+" -> ")
+                contador = contador-1
+            grafica.write("node0 -> node"+ str(self.size-1))
+
+        grafica.write("\n")
+        grafica.write("}")
+        grafica.close()
+
+        os.system("dot -Tjpg GraficarUsuarios.dot -o ListaDC_User.jpg")
+        os.system("ListaDC_User.jpg")
+
+
+
 
 def usuario(stdscr):
+        auxPos = 0
         curses.curs_set(0)
         h, w = stdscr.getmaxyx()
         area = [[4,4], [h-4, w-4]]
         textpad.rectangle(stdscr, area[0][0], area[0][1], area[1][0], area[1][1])
         stdscr.addstr(1, w//2 - len("Usuarios")//2, "Usuarios")
+        us = Usuarios()
+        us.NuevoUser("Jeanifer")
+        us.NuevoUser("Carlos")
+        us.NuevoUser("Ale")
+        while 1:
+            key = stdscr.getch()
+            stdscr.clear()
+            if (key == curses.KEY_RIGHT):
+                auxPos += 1
+                us.RecorrerUs(stdscr, "der", auxPos)
+            elif (key == curses.KEY_LEFT):
+                auxPos = auxPos - 1
+                us.RecorrerUs(stdscr, "izq", auxPos)
 
 def reporte(stdscr):
     curses.curs_set(0)
@@ -199,6 +318,11 @@ def reporte(stdscr):
     area = [[4,4], [h-4, w-4]]
     textpad.rectangle(stdscr, area[0][0], area[0][1], area[1][0], area[1][1])
     stdscr.addstr(1, w//2 - len("Reportes")//2, "Reportes")
+    us = Usuarios()
+    us.NuevoUser("Alejandrita")
+    us.NuevoUser("Garcia")
+    us.NuevoUser("Rodas")
+    us.graficarUser()
 
 def carga(stdscr):
     curses.curs_set(0)

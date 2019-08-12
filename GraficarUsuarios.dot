@@ -1,0 +1,9 @@
+digraph G { 
+rankdir=LR  
+node [shape= box, color=orange]; 
+node0 [label = Alejandrita] 
+node1 [label = Garcia] 
+node2 [label = Rodas] 
+node0 -> node1 -> node2 -> node0
+node2 -> node1 -> node0 -> node2
+}
