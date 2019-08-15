@@ -13,6 +13,9 @@ from curses import KEY_DOWN, KEY_UP, KEY_LEFT, KEY_RIGHT, KEY_F5, KEY_BACKSPACE,
 op = ['1. Play', '2. Scoreboard', '3. User Selection','4. Reports', '5. Bulk Loading ', '6. Exit']
 reportes = ['a. Snake report', 'b. Score report', 'c. Scoreboard report', 'd. Users report', 'REGRESAR']
 user = []
+puntos = []
+cuerpo = []
+scoreUser = []
 
 def opciones(stdscr, Seleccion):
     stdscr.clear()
@@ -213,8 +216,11 @@ def juego(stdscr, Nombre):
     stdscr.addstr(1, 15, Nombre)
     #Primeros nodos, que no van a ser eliminados 
     sn.Cabeza(stdscr, h//2, w//2+1)
+    cuerpo.append([h//2, w//2+1])
     sn.Comer(stdscr,h//2, w//2)
+    cuerpo.append([h//2, w//2])
     sn.Comer(stdscr,h//2, w//2-1)
+    cuerpo.append([h//2, w//2-1])
     snake = [[h//2, w//2+1], [h//2, w//2], [h//2, w//2-1]]
     direccion = curses.KEY_RIGHT
     # Dibujar la snake 
@@ -224,6 +230,7 @@ def juego(stdscr, Nombre):
     # Crear el + que aumenta el tamaño 
     Comida = CrearComida(snake, area)
     stdscr.addstr(Comida[0], Comida[1], '+')
+    puntos.append([Comida[0], Comida[1]])
 
     #Crear el * que disminuye el tamaño 
     #Comida = CrearComida(snake, area)
@@ -268,19 +275,19 @@ def juego(stdscr, Nombre):
             score += 1
             score_text = "Score: {}".format(score)
             stdscr.addstr(1, w//2 - len(score_text)//2, score_text)
+            scoreUser.append([Nombre, score])
 
             # create new food
             Comida = CrearComida(snake, area)
             stdscr.addstr(Comida[0], Comida[1], '+')
-            pilap = PilaPunteo()
-            pilap.Agregar(Comida[0], Comida[1])
+            
 
             #Cambiar de nivel 
-            if (score == 2):
+            if (score == 7):
                 stdscr.timeout(70)
                 #stdscr.timeout(100 - (len(snake)//3)%90)
                 stdscr.addstr(1, 100, "SEGUNDO NIVEL")
-            elif (score == 4):
+            elif (score == 15):
                 stdscr.timeout(30)
                 #stdscr.timeout(50 - (len(snake)//3)%120)
                 stdscr.addstr(1, 100, "TERCER NIVEL")
@@ -414,6 +421,40 @@ class Usuarios():
         os.system("dot -Tjpg GraficarUsuarios.dot -o ListaDC_User.jpg")
         os.system("ListaDC_User.jpg")
 
+def GrafPuntos():
+    grafica = open("GraficarPunteos.dot", "w")
+    grafica.write("digraph G { \n")
+    grafica.write("node [shape=plaintext]  \n")
+    grafica.write("some_node [ \n")
+    grafica.write("label=< \n")
+    grafica.write("<table border=\"0\" cellborder=\"1\" cellspacing=\"0\"> \n")
+    grafica.write("<tr><td bgcolor=\"lightblue\"><font color=\"#0000ff\"> </font></td></tr>")
+    for i in range(len(puntos)):
+        grafica.write("<tr><td bgcolor=\"lightblue\"><font color=\"#0000ff\"> "+ str(puntos[i]) + "</font></td></tr> \n")
+    grafica.write("</table>> \n")
+    grafica.write("]; \n")
+    grafica.write("}")
+    grafica.close()
+    os.system("dot -Tjpg GraficarPunteos.dot -o Pila.jpg")
+    os.system("Pila.jpg")
+
+def GrafUScore():
+    grafica = open("GraficarPunteos.dot", "w")
+    grafica.write("digraph G { \n")
+    grafica.write("rankdir=LR    \n")
+    grafica.write("node [shape= box, color=orange]; \n")
+    for i in range(len(scoreUser)):
+        grafica.write("node"+str(i)+" [label = "+ str(scoreUser[i])+ "] \n")
+    for i in range(len(scoreUser)-1):
+        grafica.write("node"+str(i)+" -> ")
+    grafica.write("node"+str(len(scoreUser)-1)+" \n")
+    grafica.write("\n")
+    grafica.write("}")
+    grafica.close()
+
+    os.system("dot -Tjpg GraficarUScore.dot -o ScoreyUser.jpg")
+    os.system("ScoreyUser.jpg")
+
 def usuario(stdscr):
     us = Usuarios()
     auxPos = 0
@@ -422,17 +463,47 @@ def usuario(stdscr):
     area = [[4,4], [h-4, w-4]]
     textpad.rectangle(stdscr, area[0][0], area[0][1], area[1][0], area[1][1])
     stdscr.addstr(1, w//2 - len("Usuarios")//2, "Usuarios")
-    actual = 0
-    keystroke = -1
-    while(keystroke==-1):
-        keystroke = stdscr.getch()
-        if (keystroke == 57):
-            main(stdscr)
-        elif (keystroke == 68):
-            actual += 1
-            us.RecorrerUs(stdscr, "der", actual)
-        elif (keystroke == 65):
-            us.RecorrerUs(stdscr, "izq", actual)
+    if (user is None):
+        stdscr.addstr(h//2, w//2 - len("No hay usuarios")//2, "NO hay usuarios")
+    else:
+        tam = len(user)-1
+        aux = 0
+        stdscr.addstr(15, 10, "<-")
+        stdscr.addstr(15, w//2-len(user[aux])//2, user[aux])
+        stdscr.addstr(15, w-15, "->")
+        keystroke = -1
+        while 1:
+            keystroke = stdscr.getch()
+            if (keystroke == 57):
+                main(stdscr)
+            elif (keystroke == 49):
+                aux +=1
+                if (aux-1 == tam):
+                    stdscr.addstr(15, w//2-10, "                                      ")
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(user[0])//2, user[0])
+                    stdscr.addstr(15, w-15, "->")
+                    aux = 0
+                else:
+                    stdscr.addstr(15, w//2-10, "                                      ")
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(user[aux])//2, user[aux])
+                    stdscr.addstr(15, w-15, "->")
+            elif (keystroke == 51):
+                aux = aux-1
+                if (aux == -1):
+                    stdscr.addstr(15, w//2-10, "                                      ")
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(user[tam])//2, user[tam])
+                    stdscr.addstr(15, w-15, "->")
+                    aux = tam
+                else:
+                    stdscr.addstr(15, w//2-10, "                                      ")
+                    stdscr.addstr(15, 10, "<-")
+                    stdscr.addstr(15, w//2-len(user[aux])//2, user[aux])
+                    stdscr.addstr(15, w-15, "->")
+                
+
 
         
 def reporte(stdscr):
@@ -452,13 +523,18 @@ def reporte(stdscr):
         elif key0 == curses.KEY_DOWN and actual0 < len(reportes)-1:
             actual0 += 1
         elif key0 == curses.KEY_ENTER or key0 in [10,13]:
-            #if (actual0 ==0):
-                #Graficar la doble enlazada snake 
-            if (actual0 == 1):
-                p = PilaPunteo()
-                p.GraficarPunteos()
-            #elif (actual0 == 2):
-                #Graficar el usuario y su punteo 
+            if (actual0 ==0):
+                #Graficar la doble enlazada snake
+                stdscr.addstr(1,50,'Grafica de usuarios creada')
+                main(stdscr) 
+            elif (actual0 == 1):
+                GrafPuntos()
+                stdscr.addstr(1,50,'Grafica de punteo creada')
+                main(stdscr)
+            elif (actual0 == 2):
+                GrafUScore()
+                stdscr.addstr(1,50,'Grafica de usuarios creada')
+                main(stdscr)
             elif (actual0 == 3):
                 u = Usuarios()
                 u.graficaUser()
