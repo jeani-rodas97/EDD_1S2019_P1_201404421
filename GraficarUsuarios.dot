@@ -1,9 +1,14 @@
 digraph G { 
 rankdir=LR  
 node [shape= box, color=orange]; 
-node0 [label = Alejandrita] 
-node1 [label = Garcia] 
-node2 [label = Rodas] 
-node0 -> node1 -> node2 -> node0
-node2 -> node1 -> node0 -> node2
+node0 [label = Ale ] 
+node1 [label = Jeany ] 
+node2 [label = Carlos ] 
+node3 [label = JC ] 
+node4 [label = Liz] 
+node5 [label = Elizabeth ] 
+node0 -> node1 -> node2 -> node3 -> node4 -> node5 
+node5 -> node4 -> node3 -> node2 -> node1 -> node0 
+node0 -> node5
+node5 -> node0
 }

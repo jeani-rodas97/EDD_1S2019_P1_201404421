@@ -1,0 +1,8 @@
+digraph G { 
+node [shape=plaintext]  
+some_node [ 
+label=< 
+<table border="0" cellborder="1" cellspacing="0"> 
+<tr><td bgcolor="lightblue"><font color="#0000ff"> </font></td></tr></table>> 
+]; 
+}
